@@ -31,3 +31,10 @@ repos:
         language: system
         files: \.tf$
         pass_filenames: false
+
+      - id: ansible-lint
+        name: ansible-lint
+        entry: bash -c 'cd ansible && ansible-lint'
+        language: system
+        files: ^ansible/
+        pass_filenames: false

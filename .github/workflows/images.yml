@@ -1,30 +1,27 @@
-name: host-image
+name: images
 
 on:
   push:
     branches: [main]
     paths:
-      - os/host/**
+      - os/**
       - Makefile
-      - .github/workflows/host-image.yml
+      - .github/workflows/images.yml
   pull_request:
     paths:
-      - os/host/**
+      - os/**
       - Makefile
-      - .github/workflows/host-image.yml
+      - .github/workflows/images.yml
   schedule:
-    - cron: "0 6 * * 1" # weekly rebuild picks up base image security fixes
+    - cron: "0 6 * * 1"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: host-image-${{ github.ref }}
+  group: images-${{ github.ref }}
   cancel-in-progress: true
-
-env:
-  IMAGE_NAME: homelab-host
 
 jobs:
   build:
@@ -32,19 +29,31 @@ jobs:
     permissions:
       contents: read
       packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: host
+            image: homelab-host
+            make_var: HOST_IMAGE
+          - target: guest
+            image: homelab-guest
+            make_var: GUEST_IMAGE
     steps:
       - uses: actions/checkout@v7
 
       - name: Set image reference
+        env:
+          IMAGE_NAME: ${{ matrix.image }}
         run: |
           owner="${GITHUB_REPOSITORY_OWNER,,}"
           echo "IMAGE=ghcr.io/${owner}/${IMAGE_NAME}" >> "$GITHUB_ENV"
           echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
 
       - name: Build
-        run: make host HOST_IMAGE="${IMAGE}:${SHORT_SHA}"
+        run: make ${{ matrix.target }} ${{ matrix.make_var }}="${IMAGE}:${SHORT_SHA}"
 
-      - name: Log in to GHCR
+      - name: Log into GHCR
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v4
         with:
@@ -56,7 +65,7 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           podman push --digestfile digest.txt "${IMAGE}:${SHORT_SHA}"
-          echo "DIGEST=$(cat digest.txt)" >> "$GITHUB_ENV"
+          echo "DIGEST=$(cat digeest.txt)" >> "$GITHUB_ENV"
           for tag in latest "$(date -u +%Y%m%d)"; do
             skopeo copy --preserve-digests \
               "docker://${IMAGE}:${SHORT_SHA}" "docker://${IMAGE}:${tag}"
@@ -75,5 +84,5 @@ jobs:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
           cosign sign --yes --key env://COSIGN_PRIVATE_KEY \
-            --new-bundle-format=false --use-signing-config=false \
+            --new-bundle-format=false --user-signing-config=false \
             "${IMAGE}@${DIGEST}"

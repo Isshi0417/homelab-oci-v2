@@ -1,0 +1,21 @@
+---
+- name: Create the VM storage logical volume
+  community.general.lvol:
+    vg: "{{ hypervisor_vg }}"
+    lv: "{{ hypervisor_vmstore_lv }}"
+    size: "{{ hypervisor_vmstore_size }}"
+    shrink: false
+
+- name: Create an XFS filesystem on the VM storage volume
+  community.general.filesystem:
+    dev: "/dev/{{ hypervisor_vg }}/{{ hypervisor_vmstore_lv }}"
+    fstype: xfs
+
+- name: Mount VM storage persistently
+  ansible.posix.mount:
+    path: "{{ hypervisor_vmstore_path }}"
+    src: "/dev/{{ hypervisor_vg }}/{{ hypervisor_vmstore_lv }}"
+    fstype: xfs
+    opts: defaults
+    state: mounted
+  notify: Restore SELinux labels on VM storage

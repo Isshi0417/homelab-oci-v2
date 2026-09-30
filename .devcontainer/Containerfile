@@ -15,7 +15,7 @@ ARG USER_GID=1000
 RUN dnf install -y --setopt=install_weak_deps=False \
   bash-completion bind-utils curl diffutils findutils gh git git-lfs \
   iproute iputils jq less libvirt-client make man-db nmap-ncat \
-  openssh-clients podman-remote python3 python3-pip restic rsync \
+  openssh-clients openssl podman-remote python3 python3-pip restic rsync \
   ShellCheck skopeo sudo tar unzip vim-enhanced which xz yq \
   && dnf clean all \
   && ln -s /usr/bin/podman-remote /usr/local/bin/podman

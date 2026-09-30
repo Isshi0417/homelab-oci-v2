@@ -39,3 +39,7 @@ site/.hugo_build.lock
 !.vscode/extensions.json
 *.swp
 .DS_Store
+
+# Installer secrets
+os/host/install/install.env
+os/host/install/config.toml

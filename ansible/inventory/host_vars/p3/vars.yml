@@ -1,0 +1,4 @@
+wifi_ssid: "{{ vault_wifi_ssid }}"
+wifi_psk: "{{ vault_wifi_psk }}"
+
+hypervisor_vmstore_size: 200g

@@ -1,0 +1,48 @@
+[customizations.installer.kickstart]
+contents = '''
+text --non-interactive
+lang en_US.UTF-8
+keyboard us
+timezone ${TIMEZONE}
+network --bootproto=dhcp --hostname=${HOST_NAME}
+
+rootpw --lock
+user --name=${ADMIN_USER} --groups=wheel --iscrypted --password=${ADMIN_PASSWORD_HASH}
+sshkey --username=${ADMIN_USER} "${SSH_PUBKEY}"
+
+# Only touch the OS disk; any data disk is set up later by Ansible
+ignoredisk --only-use=${INSTALL_DISK}
+zerombr
+clearpart --all --initlabel --disklabel=gpt
+reqpart --add-boot
+part pv.01 --size=1 --grow
+volgroup vg_sys pv.01
+# 60 GiB root; the rest of the vg_sys stays free for VM disks
+logvol / --vgname=vg_sys --name=root --fstype=xfs --size=61440
+
+reboot --eject
+
+%post --erroronfail
+cat > /etc/NetworkManager/system-connections/home-wifi.nmconnection <<'EOF'
+[connection]
+id=home-wifi
+type=wifi
+autoconnect=true
+
+[wifi]
+mode=infrastructure
+ssid=${WIFI_SSID}
+
+[wifi-security]
+key-mgmt=wpa-psk
+psk=${WIFI_PSK}
+
+[ipv4]
+method=auto
+
+[ipv6]
+method=auto
+EOF
+chmod 0600 /etc/NetworkManager/system-connections/home-wifi.nmconnection
+%end
+'''

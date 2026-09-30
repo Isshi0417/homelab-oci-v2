@@ -1,0 +1,9 @@
+---
+- name: Configure VM storage
+  ansible.builtin.import_tasks: storage.yml
+
+- name: Configure libvirt networking
+  ansible.builtin.import_tasks: libvirt.yml
+
+- name: Check the bootc update policy
+  ansible.builtin.import_tasks: bootc.yml

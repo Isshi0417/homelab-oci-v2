@@ -1,0 +1,36 @@
+---
+- name: Configure the hypervisor host
+  hosts: hypervisors
+  become: true
+
+  roles:
+    - role: fedora.linux_system_roles.selinux
+      vars:
+        selinux_state: enforcing
+        selinux_policy: targeted
+
+    - role: fedora.linux_system_roles.network
+      vars:
+        network_connections:
+          - name: home-wifi
+            type: wireless
+            autoconnect: true
+            wireless:
+              ssid: "{{ wifi_ssid }}"
+              key_mgmt: wpa-psk
+              password: "{{ wifi_psk }}"
+            ip:
+              dhcp4: true
+              auto6: true
+            state: up
+
+    - role: fedora.linux_system_roles.firewall
+      vars:
+        firewall:
+          - zone: public
+            service: [ssh, cockpit]
+            state: enabled
+            permanent: true
+            runtime: true
+
+    - role: hypervisor

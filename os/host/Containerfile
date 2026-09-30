@@ -7,12 +7,13 @@ RUN dnf install -y --setopt=install_weak_deps=False \
   qemu-kvm libvirt-daemon-kvm libvirt-client virt-install \
   cockpit cockpit-machines cockpit-podman cockpit-storaged \
   firewalld tuned nfs-utils smartmontools lm_sensors pciutils usbutils \
-  NetworkManager-wifi wpa_supplicant iwlwifi-mvm-firmware \
+  NetworkManager-wifi wpa_supplicant iwlwifi-mvm-firmware python3-lxml \
   tmux vim-enhanced bash-completion \
   && dnf clean all \
   && rm -rf /var/cache/* /var/lib/dnf /var/log/*
 
-COPY rootfs/ /
+COPY common/rootfs /
+COPY host/rootfs /
 
 RUN systemctl enable \
   cockpit.socket firewalld.service tuned.service \

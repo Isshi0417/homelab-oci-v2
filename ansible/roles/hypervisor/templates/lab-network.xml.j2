@@ -1,0 +1,11 @@
+<network>
+  <name>{{ hypervisor_net_name }}</name>
+  <forward mode='route' />
+  <bridge name='{{ hypervisor_net_bridge }}' stp='on' delay='0' />
+  <domain name='{{ hypervisor_net_domain }}' localOnly='yes' />
+  <ip address='{{ hypervisor_net_address }}' netmask='{{ hypervisor_net_netmask }}' >
+    <dhcp>
+      <range start='{{ hypervisor_net_dhcp_start }}' end='{{ hypervisor_net_dhcp_end }}' />
+    </dhcp>
+  </ip>
+</network>

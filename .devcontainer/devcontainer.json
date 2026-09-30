@@ -22,6 +22,9 @@
     "source=homelab-tf-plugins,target=/home/dev/.terraform.d/plugin-cache,type=volume",
     "source=homelab-history,target=/commandhistory,type=volume"
   ],
+  "containerEnv": {
+    "ANSIBLE_VAULT_PASSWORD_FILE": "${containerWorkspaceFolder}/ansible/.vault_pass"
+  },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "customizations": {
     "vscode": {

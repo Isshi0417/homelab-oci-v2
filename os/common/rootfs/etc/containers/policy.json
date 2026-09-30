@@ -15,6 +15,15 @@
           }
         }
       ],
+      "ghcr.io/isshi0417/homelab-guest": [
+        {
+          "type": "sigstoreSigned",
+          "keyPath": "/etc/pki/containers/homelab-cosign.pub",
+          "signedIdentity": {
+            "type": "matchRepository"
+          }
+        }
+      ],
       "registry.access.redhat.com": [
         {
           "type": "sigstoreSigned",

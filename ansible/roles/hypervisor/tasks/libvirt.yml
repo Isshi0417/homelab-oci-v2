@@ -1,0 +1,26 @@
+---
+- name: Stop autostarting the NAT network that ships with libvirt
+  community.libvirt.virt_net:
+    name: default
+    autostart: false
+
+- name: Stop the NAT network that ships with libvirt
+  community.libvirt.virt_net:
+    name: default
+    state: inactive
+
+- name: Define the routed lab network
+  community.libvirt.virt_net:
+    command: define
+    name: "{{ hypervisor_net_name }}"
+    xml: "{{ lookup('ansible.builtin.template', 'lab-network.xml.j2') }}"
+
+- name: Start the routed lab network
+  community.libvirt.virt_net:
+    name: "{{ hypervisor_net_name }}"
+    state: active
+
+- name: Autostart the routed lab network
+  community.libvirt.virt_net:
+    name: "{{ hypervisor_net_name }}"
+    autostart: true

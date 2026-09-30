@@ -2,3 +2,6 @@
 docker:
   ghcr.io/isshi0417/homelab-host:
     use-sigstore-attachments: true
+
+  ghcr.io/isshi0417/homelab-guest:
+    use-sigstore-attachments: true

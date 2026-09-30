@@ -1,0 +1,14 @@
+hypervisor_vg: vg_sys
+hypervisor_vmstore_lv: vmstore
+hypervisor_vmstore_size: 100g
+hypervisor_vmstore_path: /var/lib/libvirt/images
+
+hypervisor_net_name: lab
+hypervisor_net_bridge: virbr-lab
+hypervisor_net_address: 10.10.10.1
+hypervisor_net_netmask: 255.255.255.0
+hypervisor_net_dhcp_start: 10.10.10.100
+hypervisor_net_dhcp_end: 10.10.10.199
+hypervisor_net_domain: lab.internal
+
+hypervisor_image_ref: ghcr.io/isshi0417/homelab-host

@@ -1,0 +1,17 @@
+---
+- name: Read bootc status
+  ansible.builtin.command: bootc status --format json
+  register: hypervisor_bootc_status
+  changed_when: false
+
+- name: Assert the host tracks the signed homelab image
+  vars:
+    hypervisor_bootc_image: "{{ (hypervisor_bootc_status.stdout | from_json).spec.image }}"
+  ansible.builtin.assert:
+    that:
+      - hypervisor_bootc_image.image.startswith(hypervisor_image_ref)
+      - hypervisor_bootc_image.signature | default('') | string == 'containerPolicy'
+    fail_msg: >-
+      Host is not enforcing signatures for {{ hypervisor_image_ref }}.
+      Run step 5 of docs/install.md.
+    quiet: true

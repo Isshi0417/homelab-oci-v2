@@ -1,0 +1,19 @@
+FROM quay.io/centos-bootc/centos-bootc:stream10
+
+LABEL org.opencontainers.image.title="homelab-guest" \
+  org.opencontainers.image.description="bootc base image for homelab virtual machines"
+
+RUN dnf install -y --setopt=install_weak_deps=False \
+    cloud-init qemu-guest-agent firewalld tuned \
+    vim-enhanced bash-completion \
+  && dnf clean all \
+  && rm -rf /var/cache/* /var/lib/dnf /var/log/*
+
+COPY common/rootfs /
+COPY guest/rootfs /
+
+RUN systemctl enable \
+  firewalld.service tuned.service qemu-guest-agent.service \
+  podman-auto-update.timer
+
+RUN bootc container lint

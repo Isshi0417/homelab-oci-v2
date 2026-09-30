@@ -1,0 +1,4 @@
+---
+- name: Restore SELinux labels on VM storage
+  ansible.builtin.command: restorecon -R {{ hypervisor_vmstore_path }}
+  changed_when: true
