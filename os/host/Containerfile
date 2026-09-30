@@ -1,0 +1,22 @@
+FROM quay.io/centos-bootc/centos-bootc:stream10
+
+LABEL org.opencontainers.image.title="homelab-host" \
+  org.opencontainers.image.description="bootc hypervisor image for the homelab mini PC"
+
+RUN dnf install -y --setopt=install_weak_deps=False \
+  qemu-kvm libvirt-daemon-kvm libvirt-client virt-install \
+  cockpit cockpit-machines cockpit-podman cockpit-storaged \
+  firewalld tuned nfs-utils smartmontools lm_sensors pciutils usbutils \
+  NetworkManager-wifi wpa_supplicant iwlwifi-mvm-firmware \
+  tmux vim-enhanced bash-completion \
+  && dnf clean all \
+  && rm -rf /var/cache/* /var/lib/dnf /var/log/*
+
+COPY rootfs/ /
+
+RUN systemctl enable \
+  cockpit.socket firewalld.service tuned.service \
+  virtqemud.socket virtnetworkd.socket virtstoraged.socket \
+  virtnodedevd.socket virtsecretd.socket
+
+RUN bootc container lint
