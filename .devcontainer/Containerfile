@@ -1,0 +1,75 @@
+# Homelab toolbox: everything needed to build bootc images, run Terraform,
+# and develop/test Ansible, pinned so every machine gets the same versions.
+FROM registry.fedoraproject.org/fedora:44
+
+ARG TARGETARCH=amd64
+ARG TERRAFORM_VERSION=1.16.4
+ARG TFLINT_VERSION=0.64.0
+ARG COSIGN_VERSION=3.1.3
+ARG HUGO_VERSION=0.167.0
+ARG USERNAME=dev
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+# Base tooling from Fedora repos
+RUN dnf install -y --setopt=install_weak_deps=False \
+  bash-completion bind-utils curl diffutils findutils gh git git-lfs \
+  iproute iputils jq less libvirt-client make man-db nmap-ncat \
+  openssh-clients podman-remote python3 python3-pip restic rsync \
+  ShellCheck skopeo sudo tar unzip vim-enhanced which xz yq \
+  && dnf clean all \
+  && ln -s /usr/bin/podman-remote /usr/local/bin/podman
+
+# Pinned binaries from upstream releases, verified against published checksums
+WORKDIR /tmp/dl
+RUN set -eux; \
+  # Terraform
+  tf="terraform_${TERRAFORM_VERSION}_linux_${TARGETARCH}.zip"; \
+  curl -fsSLO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/${tf}"; \
+  curl -fsSLO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_SHA256SUMS"; \
+  grep " ${tf}\$" "terraform_${TERRAFORM_VERSION}_SHA256SUMS" | sha256sum -c -; \
+  unzip -o "${tf}" terraform -d /usr/local/bin; \
+  # TFLint
+  tfl="tflint_linux_${TARGETARCH}.zip"; \
+  curl -fsSLO "https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/${tfl}"; \
+  curl -fsSL -o tflint_checksums.txt "https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/checksums.txt"; \
+  grep " ${tfl}\$" tflint_checksums.txt | sha256sum -c -; \
+  unzip -o "${tfl}" tflint -d /usr/local/bin; \
+  # Cosign (image signing)
+  cs="cosign-linux-${TARGETARCH}"; \
+  curl -fsSLO "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/${cs}"; \
+  curl -fsSLO "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign_checksums.txt"; \
+  grep " ${cs}\$" cosign_checksums.txt | sha256sum -c -; \
+  install -m 0755 "${cs}" /usr/local/bin/cosign; \
+  # Hugo extended (personal website)
+  hg="hugo_extended_${HUGO_VERSION}_linux-${TARGETARCH}.tar.gz"; \
+  curl -fsSLO "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/${hg}"; \
+  curl -fsSLO "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_${HUGO_VERSION}_checksums.txt"; \
+  grep " ${hg}\$" "hugo_${HUGO_VERSION}_checksums.txt" | sha256sum -c -; \
+  tar -xzf "${hg}" -C /usr/local/bin hugo; \
+  chmod 0755 /usr/local/bin/*; \
+  rm -rf /tmp/dl
+
+# Ansible toolchain in an isolated venv
+COPY requirements.txt /tmp/requirements.txt
+RUN python3 -m venv /opt/venv \
+  && /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt \
+  && rm /tmp/requirements.txt
+ENV PATH=/opt/venv/bin:$PATH
+
+# Non-root user with passwordless sudo
+RUN groupadd --gid "${USER_GID}" "${USERNAME}" \
+  && useradd --uid "${USER_UID}" --gid "${USER_GID}" -m -s /bin/bash "${USERNAME}" \
+  && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/${USERNAME}" \
+  && chmod 0440 "/etc/sudoers.d/${USERNAME}" \
+  && install -d -o "${USERNAME}" -g "${USERNAME}" \
+  "/home/${USERNAME}/.terraform.d/plugin-cache" "/home/${USERNAME}/.cache" \
+  /commandhistory
+
+ENV TF_PLUGIN_CACHE_DIR=/home/${USERNAME}/.terraform.d/plugin-cache \
+  CONTAINER_HOST=unix:///run/podman/podman.sock \
+  HISTFILE=/commandhistory/.bash_history \
+  EDITOR=vim
+
+WORKDIR /workspaces
+USER ${USERNAME}

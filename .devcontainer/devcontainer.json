@@ -1,0 +1,50 @@
+{
+  "name": "homelab",
+  "build": {
+    "dockerfile": "Containerfile",
+    "context": "."
+  },
+  // Rootless Podman on the host: map host UID 1:1 into the container so
+  // files in the workspace stay owned by you
+  "runArgs": [
+    "--userns=keep-id",
+    "--security-opt=label=disable",
+    "--hostname=homelab-dev"
+  ],
+  "containerUser": "dev",
+  "remoteUser": "dev",
+  "updateRemoteUserUID": false,
+  "mounts": [
+    // Host Podman socket: `podman` inside the container is podman-remote,
+    // so image builds run on the host engine and share its cache.
+    "source=${localEnv:XDG_RUNTIME_DIR}/podman/podman.sock,target=/run/podman/podman.sock,type=bind",
+    // Persist Terraform providers and shell history across rebuilds
+    "source=homelab-tf-plugins,target=/home/dev/.terraform.d/plugin-cache,type=volume",
+    "source=homelab-history,target=/commandhistory,type=volume"
+  ],
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "hashicorp.terraform",
+        "redhat.ansible",
+        "redhat.vscode-yaml",
+        "ms-azuretools.vscode-containers",
+        "timonwong.shellcheck",
+        "editorconfig.editorconfig",
+        "github.vscode-github-actions"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "ansible.python.interpreterPath": "/opt/venv/bin/python",
+        "ansible.validation.lint.enabled": true,
+        "files.associations": {
+          "Containerfile*": "dockerfile",
+          "*.container": "ini",
+          "*.network": "ini",
+          "*.volume": "ini"
+        }
+      }
+    }
+  }
+}
