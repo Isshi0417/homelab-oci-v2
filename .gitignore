@@ -1,0 +1,41 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+!*.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Ansible
+*.retry
+.vault_pass*
+ansible/inventory/generated/
+
+# bootc-image-builder output
+output/
+*.qcow2
+*.iso
+*.raw
+
+# Hugp
+site/public
+site/resources/_gen/
+site/.hugo_build.lock
+
+# Secrets / keys
+*.key
+*.pem
+.env
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+*.swp
+.DS_Store
