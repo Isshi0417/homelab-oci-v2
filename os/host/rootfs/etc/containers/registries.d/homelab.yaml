@@ -1,0 +1,4 @@
+# Look for cosign signatures stored next to the image as sha256-<digest>.sig tags
+docker:
+  ghcr.io/isshi0417/homelab-host:
+    use-sigstore-attachments: true

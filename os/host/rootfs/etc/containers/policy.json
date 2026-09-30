@@ -1,0 +1,41 @@
+{
+  "default": [
+    {
+      "type": "insecureAcceptAnything"
+    }
+  ],
+  "transports": {
+    "docker": {
+      "ghcr.io/isshi0417/homelab-host": [
+        {
+          "type": "sigstoreSigned",
+          "keyPath": "/etc/pki/containers/homelab-cosign.pub",
+          "signedIdentity": {
+            "type": "matchRepository"
+          }
+        }
+      ],
+      "registry.access.redhat.com": [
+        {
+          "type": "sigstoreSigned",
+          "keyPath": "/etc/pki/sigstore/SIGSTORE-redhat-release3",
+          "rekorPublicKeyPath": "/etc/pki/sigstore/REKOR-signing-key"
+        }
+      ],
+      "registry.redhat.io": [
+        {
+          "type": "sigstoreSigned",
+          "keyPath": "/etc/pki/sigstore/SIGSTORE-redhat-release3",
+          "rekorPublicKeyPath": "/etc/pki/sigstore/REKOR-signing-key"
+        }
+      ]
+    },
+    "docker-daemon": {
+      "": [
+        {
+          "type": "insecureAcceptAnything"
+        }
+      ]
+    }
+  }
+}
