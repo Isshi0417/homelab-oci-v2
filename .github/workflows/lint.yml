@@ -1,0 +1,40 @@
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: .devcontainer/requirements.txt
+
+      - name: Install Python tools (same pins as the dev container)
+        run: pip install -r .devcontainer/requirements.txt
+
+      - name: Read Terraform version from the dev container
+        run: echo "TF_VERSION=$(sed -n 's/^ARG TERRAFORM_VERSION=//p' .devcontainer/Containerfile)" >> "$GITHUB_ENV"
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files --show-diff-on-failure
